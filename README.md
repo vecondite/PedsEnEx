@@ -13,6 +13,12 @@
 * **Still requires manual mapping.**
 -# This was inspired by the mod `Doorway Life` by `LKBoss`.
 
+## Installation
+* Just drag and drop the `modloader` folder to your GTA:SA root directory.
+
+## Usage
+* `PENEX` as a cheat code to refresh all configs (to see updated locations etc)
+
 ## Why?
 
 > I loved the idea of `LKBoss`' mod but the customizability/configuration was minimal in their version.
