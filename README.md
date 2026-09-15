@@ -132,3 +132,10 @@ The mod still uses some `CLEO` opcodes for some actions (such as defining task s
 ### The code for this mod is fully open-source under the MIT License. Feel free to edit and redistribute, provided you include the original license and copyright notice.
 
 Have fun! ❤️
+
+Official Posts:
+[Grinch_'s Grove](https://discord.com/channels/689515979847237649/1549445673798209677)
+[The Modders' Collective](https://discord.com/channels/1540520542824562778/1549444926758985729)
+[Cleoude's Society](https://discord.com/channels/763109892743495710/1549446562655244368)
+[Realistic Mods](https://discord.com/channels/1437706864157786145/1549453868423708812)
+[MixMods](https://discord.com/channels/793480791509565440/1549443503124123782)
