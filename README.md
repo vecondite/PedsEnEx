@@ -1,6 +1,9 @@
 # PedsEnEx
 
 > This is a GTA:SA mod that adds ambient peds walking in and out of buildings.
+<img width="1365" height="767" alt="image" src="https://github.com/user-attachments/assets/1b68b36c-cef0-44cb-bd27-7ac71b56a153" />
+<img width="1365" height="767" alt="image" src="https://github.com/user-attachments/assets/1d619ec6-a883-4316-8da0-8f36beb18c13" />
+
 
 ***
 
