@@ -49,29 +49,29 @@ It has 17 fields as follows:
 ```
 x(0)		y(1)		z(2)		r(3)	m(4)	int(5)	prob(6)	walk(7)	wt(8)	iw(9)	pid(10)	trid(11)	c(12)	cp(13)	co(14)	lp(15)	lfb(16)
 ```
-`x`, `y`, and `z` are `floats` -> They define the coordinates of the location.
-`r` is also a `float` -> This defines the radius.
+- `x`, `y`, and `z` are `floats` -> They define the coordinates of the location.
+- `r` is also a `float` -> This defines the radius.
 > The code only spawns peds if the player is within this radius and only peds within this radius will enter the door.
 
-`m` is an `integer` -> This is the model of the door.
-`int` is an `integer` (`milliseconds`) -> This is the interval at which the ped spawning logic will be fired.
-`prob` is a `float` -> This defines the probability that a ped will spawn when a spawn request is fired.
-`walk` is a `float` -> This defines the distance the ped will walk to exit the door. The ped will be given the wandering AI after it moves a distance of this value towards the door.
-`wt` is an `integer` (`milliseconds`) -> This is the maximum time a ped can spend walking. If it takes longer than that to walk (out or in) it will be teleported to the destination.
+- `m` is an `integer` -> This is the model of the door.
+- `int` is an `integer` (`milliseconds`) -> This is the interval at which the ped spawning logic will be fired.
+- `prob` is a `float` -> This defines the probability that a ped will spawn when a spawn request is fired.
+- `walk` is a `float` -> This defines the distance the ped will walk to exit the door. The ped will be given the wandering AI after it moves a distance of this value towards the door.
+- `wt` is an `integer` (`milliseconds`) -> This is the maximum time a ped can spend walking. If it takes longer than that to walk (out or in) it will be teleported to the destination.
 > NOTE: this is the **maximum** time. not a forced time. Therefore, if the ped takes only `10000 milliseconds` out of the allowed `60000 milliseconds`, it would not wait for `50000 milliseconds`. Therefore, it is recommended to give this a high value.
 
-`iw` is a `boolean` (`1`/`0`) -> This inverts the walk destination. Set this to `1` if the ped walks towards the wall instead of walking towards the door. Otherwise, leave this at `0` (Useful when adding interior locations)
-`pid` is an `integer` -> This stands for the identifier field in `pedModels.txt`. i.e. if this is set to `3`, only peds defined as 
+- `iw` is a `boolean` (`1`/`0`) -> This inverts the walk destination. Set this to `1` if the ped walks towards the wall instead of walking towards the door. Otherwise, leave this at `0` (Useful when adding interior locations)
+- `pid` is an `integer` -> This stands for the identifier field in `pedModels.txt`. i.e. if this is set to `3`, only peds defined as 
 ```
 3 = ...
 ```
 in `pedModels.txt` will be spawning at this location.
-`trid` is an `integer` -> This behaves similarly to `pid`, but this time with `timeRanges.txt`.
-`c` is an `integer` -> This acts as a bool and a identifier field (like `pid`) enables/disables (if `0`) cops spawning when the player is wanted.
-`cp` is a `float` -> This is the probability that a cop will spawn if the player is wanted. **This value is multiplied by the number of stars**.
-`co` is a `boolean` (`1`/`0`) -> Set this to `1` if the location will only have cops spawning
-`lp` is a `float` -> This is the probability that a ped will enter (if from outside) or leave (if from inside).
-`lfb` is a `boolean` (`1`/`0`) -> This stands for leavefallback, if a ped is not found in the radius to enter/exit, if this is `0` nothing will happen but if this is `1` a ped will walk out (if from outside) or walk in (if from inside).
+- `trid` is an `integer` -> This behaves similarly to `pid`, but this time with `timeRanges.txt`.
+- `c` is an `integer` -> This acts as a bool and a identifier field (like `pid`) enables/disables (if `0`) cops spawning when the player is wanted.
+- `cp` is a `float` -> This is the probability that a cop will spawn if the player is wanted. **This value is multiplied by the number of stars**.
+- `co` is a `boolean` (`1`/`0`) -> Set this to `1` if the location will only have cops spawning
+- `lp` is a `float` -> This is the probability that a ped will enter (if from outside) or leave (if from inside).
+- `lfb` is a `boolean` (`1`/`0`) -> This stands for leavefallback, if a ped is not found in the radius to enter/exit, if this is `0` nothing will happen but if this is `1` a ped will walk out (if from outside) or walk in (if from inside).
 
 ### `pedModels.txt`
 This file defines the peds (model ids) for each `pid` in `locations.txt`
