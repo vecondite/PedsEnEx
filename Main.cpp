@@ -29,7 +29,8 @@ std::vector<std::string> split(std::string text, char delimiter) {
                 output.push_back(trimmedChunk);
             }
         }
-    } else {
+    }
+    else {
         while (std::getline(ss, chunk, delimiter)) {
             std::string trimmedChunk = trim(chunk);
             if (!trimmedChunk.empty()) {
@@ -74,7 +75,7 @@ std::vector<Location> loadedLocations;
 std::unordered_map<int, std::vector<unsigned int>> locationPeds;
 std::unordered_map<int, std::vector<TimeRange>> locationTimeRanges;
 std::unordered_map<int, std::vector<unsigned int>> locationCopPeds;
-std::vector<eWeaponType> copWeapons = {WEAPONTYPE_PISTOL, WEAPONTYPE_NIGHTSTICK};
+std::vector<eWeaponType> copWeapons = { WEAPONTYPE_PISTOL, WEAPONTYPE_NIGHTSTICK };
 std::vector<int> spawnedPeds;
 std::vector<unsigned int> lastPedModels;
 
@@ -111,9 +112,9 @@ struct Main
             RpAnimBlendClumpUpdateAnimations(ped->m_pRwClump, CTimer::ms_fTimeStep);
         }
 
-        #if defined(GTASA)
-                ped->m_fContactSurfaceBrightness = 0.5f;
-        #endif
+#if defined(GTASA)
+        ped->m_fContactSurfaceBrightness = 0.5f;
+#endif
 
         CWorld::Add(ped);
 
@@ -239,7 +240,8 @@ struct Main
                         std::vector<unsigned int> emptyPeds;
                         emptyPeds.push_back(0);
                         loaded.pedModels = emptyPeds;
-                    } else {
+                    }
+                    else {
                         loaded.pedModels = locationPeds[-1];
                     }
                 }
@@ -266,20 +268,35 @@ struct Main
         locations.close();
     }
 
+    void logEntry(static char* msg) {
+        std::ofstream logFile(PLUGIN_PATH("PedsEnEx.log"), std::ios::app);
+        if (logFile.is_open()) {
+            logFile << msg << std::endl;
+            logFile.close();
+        }
+    }
+
     void spawnPed(Location currentLocation, bool copTime, CVector locationCoords, CObject* closest, int wantedLevel, bool civTime, CVector destination, CPlayerPed* player) {
         CPed* ped = nullptr;
         bool cop = false;
         float copRoll = static_cast<float>(rand()) / RAND_MAX * 100.0;
         bool spawnCop = currentLocation.copProb * wantedLevel >= copRoll;
+
+        static char log[1024];
+
         if (copTime && spawnCop) {
             int copModelIndex = rand() % currentLocation.copModels.size();
             int copModelId = currentLocation.copModels[copModelIndex];
+            sprintf_s(log, "Cop Model: %d", copModelId);
+            logEntry(log);
             ped = createPed(copModelId, locationCoords, closest, PED_TYPE_COP);
             cop = true;
         }
         else if (civTime && !currentLocation.copsOnly) {
             int pedModelIndex = rand() % currentLocation.pedModels.size();
             int pedModelId = currentLocation.pedModels[pedModelIndex];
+            sprintf_s(log, "Ped Model: %d", pedModelId);
+            logEntry(log);
             ped = createPed(pedModelId, locationCoords, closest, PED_TYPE_CIVMALE);
         }
 
@@ -328,6 +345,8 @@ struct Main
         // register event callbacks
         Events::gameProcessEvent += [] { gInstance.OnGameProcess(); };
         loadLocations();
+        std::ofstream clearer("PedsEnEx.log", std::ios::trunc);
+        if (clearer.is_open()) clearer.close();
     }
 
     void OnGameProcess()
@@ -349,7 +368,7 @@ struct Main
                 CTask* pedTask = oldPed->m_pIntelligence->m_TaskMgr.GetActiveTask();
                 if (!pedTask || pedTask->GetId() == TASK_COMPLEX_WANDER || pedTask->GetId() == TASK_SIMPLE_STAND_STILL) {
                     oldPed->bFadeOut = true;
-//                        plugin::Command<0x009B>(oldPed);
+                    //                        plugin::Command<0x009B>(oldPed);
                     it = spawnedPeds.erase(it);
                     continue;
                 }
@@ -389,7 +408,7 @@ struct Main
                     }
                 }
 
-                if(civTime || copTime) {
+                if (civTime || copTime) {
                     currentLocation.nextRing = currentTime + currentLocation.interval;
 
                     float randomVal = static_cast<float>(rand()) / RAND_MAX * 100.0;
@@ -426,10 +445,10 @@ struct Main
                                         if (squaredPedDist < maxPedDist) {
                                             maxPedDist = squaredPedDist;
                                             closestPed = randPed;
-/*                                            float breakRoll = static_cast<float>(rand()) / RAND_MAX * 100.0;
-                                            if (breakRoll <= 20.0f) {
-                                                break;
-                                            }*/
+                                            /*                                            float breakRoll = static_cast<float>(rand()) / RAND_MAX * 100.0;
+                                                                                        if (breakRoll <= 20.0f) {
+                                                                                            break;
+                                                                                        }*/
                                         }
                                     }
                                 }
@@ -439,9 +458,9 @@ struct Main
                                         lastPedModels.erase(lastPedModels.begin());
                                     }
                                     lastPedModels.push_back(closestPed->m_nModelIndex);
-//                                    CVector finalDest = currentLocation.invertWalk
-                                        //? (doorCenter - (closest->GetMatrix().GetForward() * currentLocation.walkDist))
-                                        //: (doorCenter + (closest->GetMatrix().GetForward() * currentLocation.walkDist));
+                                    //                                    CVector finalDest = currentLocation.invertWalk
+                                                                            //? (doorCenter - (closest->GetMatrix().GetForward() * currentLocation.walkDist))
+                                                                            //: (doorCenter + (closest->GetMatrix().GetForward() * currentLocation.walkDist));
                                     int taskSequence = 0;
                                     plugin::Command<0x0615>(&taskSequence);
                                     plugin::Command<0x05D3>(-1, destination.x, destination.y, destination.z, 4, currentLocation.walkTime);
@@ -449,7 +468,7 @@ struct Main
                                     plugin::Command<0x0616>(taskSequence);
                                     plugin::Command<0x0618>(closestPed, taskSequence);
                                     plugin::Command<0x061B>(taskSequence);
-                                    
+
                                     closestPed->SetCharCreatedBy(1);
                                     plugin::Command<0x01C2>(closestPed);
                                     CStreaming::SetModelIsDeletable(closestPed->m_nModelIndex);
@@ -463,7 +482,8 @@ struct Main
                                         spawnPed(currentLocation, copTime, locationCoords, closest, wantedLevel, civTime, destination, player);
                                     }
                                 }
-                            } else {
+                            }
+                            else {
                                 spawnPed(currentLocation, copTime, locationCoords, closest, wantedLevel, civTime, destination, player);
                             }
                         }
