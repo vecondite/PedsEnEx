@@ -91,12 +91,12 @@ example:
 ```
 and in the `cop` field of `locations.txt`, it should be `1`
 
-ID `-1` is the fallback field. If an entry with the `cop` ID defined in `locations.txt` isn't found, this will be used.
+- ID `-1` is the fallback field. If an entry with the `cop` ID defined in `locations.txt` isn't found, this will be used.
 > Do **NOT** use id `0`. (Setting the `c` field to `0` in `locations.txt` is the hardcoded switch to completely disable cops for that location).
 ### `timeRanges.txt`
-This file defines the time ranges for each `trid` defined in `locations.txt`
-ID `0` is the time range for cops
-This uses the **24 hour time format**.
+- This file defines the time ranges for each `trid` defined in `locations.txt`
+- ID `0` is the time range for cops
+- This uses the **24 hour time format**.
 Format:
 ```
 id = timeStart-timeEnd,timeStart-timeEnd
