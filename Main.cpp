@@ -91,7 +91,7 @@ struct Main
             return nullptr;
             //break;
         }
-        auto ped = new CCivilianPed(pedType, pedModelId);
+        auto ped = (pedType == PED_TYPE_COP) ? static_cast<CPed*>(new CCopPed(static_cast<eCopType>(pedModelId))) : new CCivilianPed(pedType, pedModelId);
         if (!ped)
         {
             sprintf_s(msg, "~r~~h~Failed to spawn ped model: %d", pedModelId);
@@ -287,7 +287,7 @@ struct Main
         if (copTime && spawnCop) {
             int copModelIndex = rand() % currentLocation.copModels.size();
             int copModelId = currentLocation.copModels[copModelIndex];
-            sprintf_s(log, "Cop Model: %d", copModelId);
+            sprintf_s(log, "Cop Model: %d - At: %f %f %f", copModelId, locationCoords.x, locationCoords.y, locationCoords.z);
             logEntry(log);
             ped = createPed(copModelId, locationCoords, closest, PED_TYPE_COP);
             cop = true;
@@ -295,7 +295,7 @@ struct Main
         else if (civTime && !currentLocation.copsOnly) {
             int pedModelIndex = rand() % currentLocation.pedModels.size();
             int pedModelId = currentLocation.pedModels[pedModelIndex];
-            sprintf_s(log, "Ped Model: %d", pedModelId);
+            sprintf_s(log, "Ped Model: %d - At: %f %f %f", pedModelId, locationCoords.x, locationCoords.y, locationCoords.z);
             logEntry(log);
             ped = createPed(pedModelId, locationCoords, closest, PED_TYPE_CIVMALE);
         }
@@ -310,13 +310,15 @@ struct Main
             eWeaponType copWeapon = copWeapons[rand() % copWeapons.size()];
             plugin::Command<0x01B2>(ped, copWeapon, 9999);
 
+            ped->m_pIntelligence->SetPedDecisionMakerType(eDecisionMakerType::PED_COP);
             plugin::Command<0x0615>(&taskSequence);
             plugin::Command<0x05D3>(-1, destination.x, destination.y, destination.z, 4, currentLocation.walkTime);
             plugin::Command<0x05E2>(-1, player);
             plugin::Command<0x0616>(taskSequence);
             plugin::Command<0x0618>(ped, taskSequence);
 
-            plugin::Command<0x060B>(ped, 65537);
+            CCopPed* copPed = static_cast<CCopPed*>(ped);
+            copPed->AddCriminalToKill(player);
         }
         else {
             plugin::Command<0x0615>(&taskSequence);
@@ -324,8 +326,7 @@ struct Main
             plugin::Command<0x05DE>(-1);
             plugin::Command<0x0616>(taskSequence);
             plugin::Command<0x0618>(ped, taskSequence);
-
-            ped->SetPedDefaultDecisionMaker();
+            ped->m_pIntelligence->SetPedDecisionMakerType(eDecisionMakerType::PED_INDOORS);
         }
 
         ped->SetCharCreatedBy(1);
@@ -433,7 +434,7 @@ struct Main
                                 : (doorCenter - (closest->GetMatrix().GetForward() * currentLocation.walkDist));
                             float leaveVal = static_cast<float>(rand()) / RAND_MAX * 100.0;
 
-                            plugin::Command<0x0905>(closest, 0);
+                            if(!closest->m_nObjectFlags.bbIsDoorOpen) plugin::Command<0x0905>(closest, 0);
 
                             if (currentLocation.leaveProb >= leaveVal) {
                                 CPed* closestPed = nullptr;
