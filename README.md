@@ -5,7 +5,6 @@
 <img width="1365" height="767" alt="Screenshot 2026-10-03 145244" src="https://github.com/user-attachments/assets/61d3fc41-c3ef-48a7-89f7-e356483fa06e" />
 <img width="1365" height="767" alt="image" src="https://github.com/user-attachments/assets/1b68b36c-cef0-44cb-bd27-7ac71b56a153" />
 <img width="1365" height="767" alt="image" src="https://github.com/user-attachments/assets/1d619ec6-a883-4316-8da0-8f36beb18c13" />
-***
 
 # Everything about the mod is described in the [Wiki](https://github.com/vecondite/PedsEnEx/wiki)!
 
