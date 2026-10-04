@@ -1,12 +1,14 @@
 #include <plugin.h> // Plugin-SDK version 1005 from 2026-08-14 08:10:00
 #include <ranges>
-#include <CMessages.h>
 #include <CClock.h>
 #include <CStreaming.h>
 #include <CCivilianPed.h>
 #include <CWorld.h>
 #include <CCheat.h>
 #include <extensions/ScriptCommands.h>
+#include <mini/ini.h>
+#include <windows.h>
+#include <CHud.h>
 
 using namespace plugin;
 
@@ -48,6 +50,7 @@ struct TimeRange {
 };
 
 struct Location {
+    unsigned int id;
     float x;
     float y;
     float z;
@@ -78,16 +81,47 @@ std::unordered_map<int, std::vector<unsigned int>> locationCopPeds;
 std::vector<eWeaponType> copWeapons = { WEAPONTYPE_PISTOL, WEAPONTYPE_NIGHTSTICK };
 std::vector<int> spawnedPeds;
 std::vector<unsigned int> lastPedModels;
+bool fixCramming;
+bool logging;
+unsigned int savepeds;
 
 struct Main
 {
+    std::string cheatCode;
+
+    void readConfig() {
+        mINI::INIFile file(PLUGIN_PATH("config.ini"));
+        mINI::INIStructure ini;
+        bool read = file.read(ini);
+        if (!read) {
+            cheatCode = "PENEX";
+            fixCramming = true;
+            logging = false;
+            savepeds = 3;
+            ini["settings"]["cheat"] = cheatCode;
+            ini["settings"]["cramfix"] = std::to_string(fixCramming);
+            ini["settings"]["savepeds"] = std::to_string(savepeds);
+            ini["settings"]["logging"] = std::to_string(logging);
+            file.generate(ini);
+            MessageBoxA(NULL, "config.ini not found. config with default values has been generated.", "PedsEnEx", MB_OK | MB_ICONINFORMATION);
+        }
+        cheatCode = ini["settings"]["cheat"];
+        fixCramming = std::stoi(ini["settings"]["cramfix"]);
+        logging = std::stoi(ini["settings"]["logging"]);
+        savepeds = std::stoi(ini["settings"]["savepeds"]);
+        static char msg[1024];
+        sprintf_s(msg, "Loaded ~g~~h~~h~%d ~w~locations!~n~~n~Config reloaded!~n~~n~cheat: ~b~~h~~h~%s~w~~n~cramfix: ~b~~h~~h~%d~w~~n~savepeds: ~b~~h~~h~%d~w~~n~logging: ~b~~h~~h~%d~w~", loadedLocations.size(), cheatCode.c_str(), fixCramming, savepeds, logging);
+        CHud::SetHelpMessage(msg, true, false, false);
+        std::reverse(cheatCode.begin(), cheatCode.end());
+    }
+
     CPed* createPed(int pedModelId, CVector locationCoords, CObject* closest, ePedType pedType) {
         static char msg[255];
         if (!CStreaming::HasModelLoaded(pedModelId)) CStreaming::RequestModel(pedModelId, 0);
         CStreaming::LoadAllRequestedModels(false);
         if (!CStreaming::HasModelLoaded(pedModelId)) {
             sprintf_s(msg, "~r~~h~Failed to load ped model: %d", pedModelId);
-            CMessages::AddMessageJumpQ(msg, 10000, 0);
+            CHud::SetHelpMessage(msg, true, false, false);
             return nullptr;
             //break;
         }
@@ -95,13 +129,11 @@ struct Main
         if (!ped)
         {
             sprintf_s(msg, "~r~~h~Failed to spawn ped model: %d", pedModelId);
-            CMessages::AddMessageJumpQ(msg, 10000, 0);
+            CHud::SetHelpMessage(msg, true, false, false);
             CStreaming::SetModelIsDeletable(pedModelId);
             return nullptr;
             //break;
         }
-        //sprintf_s(msg, "Created Ped of model: %d", pedModelId);
-        CMessages::AddMessageJumpQ(msg, 1000, 0);
         ped->SetPosition(locationCoords);
         float pedHeading = closest->GetHeading() + DegToRad(180.0f);
         ped->SetHeading(pedHeading);
@@ -210,27 +242,28 @@ struct Main
                 if (line.empty() || line[0] == '#' || line[0] == ';' || (line[0] == '/' && line[1] == '/')) continue;
                 std::vector<std::string> values = split(line, ' ');
 
-                if (values.size() != 17) continue;
+                if (values.size() != 18) continue;
 
                 Location loaded;
-                loaded.x = std::stof(values[0]);
-                loaded.y = std::stof(values[1]);
-                loaded.z = std::stof(values[2]);
-                loaded.radiusSqr = std::stof(values[3]) * std::stof(values[3]);
-                loaded.model = std::stoi(values[4]);
-                loaded.interval = std::stoi(values[5]);
+                loaded.id = std::stoi(values[0]);
+                loaded.x = std::stof(values[1]);
+                loaded.y = std::stof(values[2]);
+                loaded.z = std::stof(values[3]);
+                loaded.radiusSqr = std::stof(values[4]) * std::stof(values[4]);
+                loaded.model = std::stoi(values[5]);
+                loaded.interval = std::stoi(values[6]);
                 loaded.nextRing = CTimer::m_snTimeInMilliseconds + loaded.interval;
-                loaded.probability = stof(values[6]);
-                loaded.walkDist = stof(values[7]);
-                loaded.walkTime = stoi(values[8]);
-                loaded.invertWalk = stoi(values[9]);
-                loaded.pedsId = stoi(values[10]);
-                loaded.timeRangeId = stoi(values[11]);
-                loaded.cops = stoi(values[12]);
-                loaded.copProb = stof(values[13]);
-                loaded.copsOnly = stoi(values[14]);
-                loaded.leaveProb = stof(values[15]);
-                loaded.lfb = stoi(values[16]);
+                loaded.probability = stof(values[7]);
+                loaded.walkDist = stof(values[8]);
+                loaded.walkTime = stoi(values[9]);
+                loaded.invertWalk = stoi(values[10]);
+                loaded.pedsId = stoi(values[11]);
+                loaded.timeRangeId = stoi(values[12]);
+                loaded.cops = stoi(values[13]);
+                loaded.copProb = stof(values[14]);
+                loaded.copsOnly = stoi(values[15]);
+                loaded.leaveProb = stof(values[16]);
+                loaded.lfb = stoi(values[17]);
 
                 if (locationPeds.count(loaded.pedsId) > 0) {
                     loaded.pedModels = locationPeds[loaded.pedsId];
@@ -268,7 +301,7 @@ struct Main
         locations.close();
     }
 
-    void logEntry(static char* msg) {
+    void logEntry(const char* msg) {
         std::ofstream logFile(PLUGIN_PATH("PedsEnEx.log"), std::ios::app);
         if (logFile.is_open()) {
             logFile << msg << std::endl;
@@ -276,68 +309,74 @@ struct Main
         }
     }
 
-    void spawnPed(Location currentLocation, bool copTime, CVector locationCoords, CObject* closest, int wantedLevel, bool civTime, CVector destination, CPlayerPed* player) {
-        CPed* ped = nullptr;
-        bool cop = false;
-        float copRoll = static_cast<float>(rand()) / RAND_MAX * 100.0;
-        bool spawnCop = currentLocation.copProb * wantedLevel >= copRoll;
+    void spawnPed(Location currentLocation, bool copTime, CVector locationCoords, CObject* closest, int wantedLevel, bool civTime, CVector destination, CPlayerPed* player, const CObject* door) {
+        if (fixCramming ? (!door->m_nObjectFlags.bbIsDoorOpen) : true) {
+            CPed* ped = nullptr;
+            bool cop = false;
+            float copRoll = static_cast<float>(rand()) / RAND_MAX * 100.0;
+            bool spawnCop = currentLocation.copProb * wantedLevel >= copRoll;
 
-        static char log[1024];
+            static char log[1024];
 
-        if (copTime && spawnCop) {
-            int copModelIndex = rand() % currentLocation.copModels.size();
-            int copModelId = currentLocation.copModels[copModelIndex];
-            sprintf_s(log, "Cop Model: %d - At: %f %f %f", copModelId, locationCoords.x, locationCoords.y, locationCoords.z);
-            logEntry(log);
-            ped = createPed(copModelId, locationCoords, closest, PED_TYPE_COP);
-            cop = true;
+            if (copTime && spawnCop) {
+                int copModelIndex = rand() % currentLocation.copModels.size();
+                int copModelId = currentLocation.copModels[copModelIndex];
+                if (logging) {
+                    sprintf_s(log, "Cop Model: %d - At location ID: %d - Coordinates: %f %f %f", copModelId, currentLocation.id, locationCoords.x, locationCoords.y, locationCoords.z);
+                    logEntry(log);
+                }
+                ped = createPed(copModelId, locationCoords, closest, PED_TYPE_COP);
+                cop = true;
+            }
+            else if (civTime && !currentLocation.copsOnly) {
+                int pedModelIndex = rand() % currentLocation.pedModels.size();
+                int pedModelId = currentLocation.pedModels[pedModelIndex];
+                if (logging) {
+                    sprintf_s(log, "Ped Model: %d - At location ID: %d - Coordinates: %f %f %f", pedModelId, currentLocation.id, locationCoords.x, locationCoords.y, locationCoords.z);
+                    logEntry(log);
+                }
+                ped = createPed(pedModelId, locationCoords, closest, PED_TYPE_CIVMALE);
+            }
+
+            if (!ped) {
+                return;
+            }
+
+            int taskSequence = 0;
+
+            if (cop) {
+                eWeaponType copWeapon = copWeapons[rand() % copWeapons.size()];
+                plugin::Command<0x01B2>(ped, copWeapon, 9999);
+
+                ped->m_pIntelligence->SetPedDecisionMakerType(eDecisionMakerType::PED_COP);
+                plugin::Command<0x0615>(&taskSequence);
+                plugin::Command<0x05D3>(-1, destination.x, destination.y, destination.z, 4, currentLocation.walkTime);
+                plugin::Command<0x05E2>(-1, player);
+                plugin::Command<0x0616>(taskSequence);
+                plugin::Command<0x0618>(ped, taskSequence);
+
+                CCopPed* copPed = static_cast<CCopPed*>(ped);
+                copPed->AddCriminalToKill(player);
+            }
+            else {
+                plugin::Command<0x0615>(&taskSequence);
+                plugin::Command<0x05D3>(-1, destination.x, destination.y, destination.z, 4, currentLocation.walkTime);
+                plugin::Command<0x05DE>(-1);
+                plugin::Command<0x0616>(taskSequence);
+                plugin::Command<0x0618>(ped, taskSequence);
+                ped->m_pIntelligence->SetPedDecisionMakerType(eDecisionMakerType::PED_INDOORS);
+            }
+
+            ped->SetCharCreatedBy(1);
+            plugin::Command<0x01C2>(ped);
+            CStreaming::SetModelIsDeletable(ped->m_nModelIndex);
+            plugin::Command<0x061B>(taskSequence);
+
+            if (lastPedModels.size() >= savepeds) {
+                lastPedModels.erase(lastPedModels.begin());
+            }
+            lastPedModels.push_back(ped->m_nModelIndex);
         }
-        else if (civTime && !currentLocation.copsOnly) {
-            int pedModelIndex = rand() % currentLocation.pedModels.size();
-            int pedModelId = currentLocation.pedModels[pedModelIndex];
-            sprintf_s(log, "Ped Model: %d - At: %f %f %f", pedModelId, locationCoords.x, locationCoords.y, locationCoords.z);
-            logEntry(log);
-            ped = createPed(pedModelId, locationCoords, closest, PED_TYPE_CIVMALE);
-        }
-
-        if (!ped) {
-            return;
-        }
-
-        int taskSequence = 0;
-
-        if (cop) {
-            eWeaponType copWeapon = copWeapons[rand() % copWeapons.size()];
-            plugin::Command<0x01B2>(ped, copWeapon, 9999);
-
-            ped->m_pIntelligence->SetPedDecisionMakerType(eDecisionMakerType::PED_COP);
-            plugin::Command<0x0615>(&taskSequence);
-            plugin::Command<0x05D3>(-1, destination.x, destination.y, destination.z, 4, currentLocation.walkTime);
-            plugin::Command<0x05E2>(-1, player);
-            plugin::Command<0x0616>(taskSequence);
-            plugin::Command<0x0618>(ped, taskSequence);
-
-            CCopPed* copPed = static_cast<CCopPed*>(ped);
-            copPed->AddCriminalToKill(player);
-        }
-        else {
-            plugin::Command<0x0615>(&taskSequence);
-            plugin::Command<0x05D3>(-1, destination.x, destination.y, destination.z, 4, currentLocation.walkTime);
-            plugin::Command<0x05DE>(-1);
-            plugin::Command<0x0616>(taskSequence);
-            plugin::Command<0x0618>(ped, taskSequence);
-            ped->m_pIntelligence->SetPedDecisionMakerType(eDecisionMakerType::PED_INDOORS);
-        }
-
-        ped->SetCharCreatedBy(1);
-        plugin::Command<0x01C2>(ped);
-        CStreaming::SetModelIsDeletable(ped->m_nModelIndex);
-        plugin::Command<0x061B>(taskSequence);
-
-        if (lastPedModels.size() >= 3) {
-            lastPedModels.erase(lastPedModels.begin());
-        }
-        lastPedModels.push_back(ped->m_nModelIndex);
     }
 
     Main()
@@ -346,17 +385,16 @@ struct Main
         // register event callbacks
         Events::gameProcessEvent += [] { gInstance.OnGameProcess(); };
         loadLocations();
+        readConfig();
         std::ofstream clearer("PedsEnEx.log", std::ios::trunc);
         if (clearer.is_open()) clearer.close();
     }
 
     void OnGameProcess()
     {
-        if (strncmp(CCheat::m_CheatString, "XENEP", 5) == 0) {
-            static char msg[255];
+        if (strncmp(CCheat::m_CheatString, cheatCode.c_str(), cheatCode.size()) == 0) {
             loadLocations();
-            sprintf_s(msg, "Loaded %d Locations!", loadedLocations.size());
-            CMessages::AddMessageJumpQ(msg, 10000, 0);
+            readConfig();
             CCheat::m_CheatString[0] = '\0';
         }
         for (auto it = spawnedPeds.begin(); it != spawnedPeds.end();) {
@@ -455,7 +493,7 @@ struct Main
                                 }
 
                                 if (closestPed) {
-                                    if (lastPedModels.size() >= 3) {
+                                    if (lastPedModels.size() >= savepeds) {
                                         lastPedModels.erase(lastPedModels.begin());
                                     }
                                     lastPedModels.push_back(closestPed->m_nModelIndex);
@@ -480,12 +518,12 @@ struct Main
                                 }
                                 else {
                                     if (currentLocation.lfb) {
-                                        spawnPed(currentLocation, copTime, locationCoords, closest, wantedLevel, civTime, destination, player);
+                                        spawnPed(currentLocation, copTime, locationCoords, closest, wantedLevel, civTime, destination, player, closest);
                                     }
                                 }
                             }
                             else {
-                                spawnPed(currentLocation, copTime, locationCoords, closest, wantedLevel, civTime, destination, player);
+                                spawnPed(currentLocation, copTime, locationCoords, closest, wantedLevel, civTime, destination, player, closest);
                             }
                         }
                     }
