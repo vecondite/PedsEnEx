@@ -9,8 +9,8 @@
 # Everything about the mod is described in the [Wiki](https://github.com/vecondite/PedsEnEx/wiki)!
 
 ## CREDITS
-- `LKBoss` - inspired by the mod `Doorway Life` by them - Nothing from their script was used in this mod. I made this from the ground up. I just got the idea from this mod.
-- `rill_` - for the door unlocking opcode (https://libertycity.net/files/gta-san-andreas/221665-doorway-life.html)
+- `LKBoss` - inspired by the mod [`Doorway Life`](https://libertycity.net/files/gta-san-andreas/221665-doorway-life.html) by them - Nothing from their script was used in this mod. I made this from the ground up. I just got the idea from this mod.
+- `rill_` - for the door unlocking opcode
 - `mirandmc` - initial help regarding opcodes
 - `sebicu` - offering help
 - `black.greyed_61525` - offering help
@@ -19,6 +19,7 @@
 - `Sanny Builder Library` - Used to find opcodes (https://library.sannybuilder.com/#/sa/script) (see below)
 - `Google Gemini` - Spotting bugs and some help with the code (see above), Location Editor file (check source code).
 - `vecondite` - Me. Wrote the code :D
+- `metayeti` - the mINI library
 
 > Please let me know if I missed any credits.
 ---
